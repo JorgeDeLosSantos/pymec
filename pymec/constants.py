@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import numpy
+import numpy as np
 
 # Math 
-pi = numpy.pi 
-e = numpy.e
+pi = np.pi 
+e = np.e
 
 # Physics
 g = 9.806 # m/s^2

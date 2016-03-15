@@ -1,103 +1,148 @@
 # -*- coding: utf-8 -*-
-"""
-This example demonstrates many of the 2D plotting capabilities
-in pyqtgraph. All of the plots may be panned/scaled by dragging with 
-the left/right mouse buttons. Right click on any plot to show a context menu.
-"""
-
-#import initExample ## Add path to library (just for examples; you do not need this)
-
-
-from pyqtgraph.Qt import QtGui, QtCore
+# Sections 
 import numpy as np
-import pyqtgraph as pg
-
-#QtGui.QApplication.setGraphicsSystem('raster')
-app = QtGui.QApplication([])
-#mw = QtGui.QMainWindow()
-#mw.resize(800,800)
-
-win = pg.GraphicsWindow(title="Basic plotting examples")
-win.resize(1000,600)
-win.setWindowTitle('pyqtgraph example: Plotting')
-
-# Enable antialiasing for prettier plots
-pg.setConfigOptions(antialias=True)
-
-p1 = win.addPlot(title="Basic array plotting", y=np.random.normal(size=100))
-
-p2 = win.addPlot(title="Multiple curves")
-p2.plot(np.random.normal(size=100), pen=(255,0,0), name="Red curve")
-p2.plot(np.random.normal(size=110)+5, pen=(0,255,0), name="Blue curve")
-p2.plot(np.random.normal(size=120)+10, pen=(0,0,255), name="Green curve")
-
-p3 = win.addPlot(title="Drawing with points")
-p3.plot(np.random.normal(size=100), pen=(200,200,200), symbolBrush=(255,0,0), symbolPen='w')
 
 
-win.nextRow()
+class Section(object):
+    def __init__(self):
+        pass
+    
+    def __str__(self):
+        return "%s"%(self.__class__)
 
-p4 = win.addPlot(title="Parametric, grid enabled")
-x = np.cos(np.linspace(0, 2*np.pi, 1000))
-y = np.sin(np.linspace(0, 4*np.pi, 1000))
-p4.plot(x, y)
-p4.showGrid(x=True, y=True)
+    
+class RectangleSection(Section):
+    def __init__(self,b,h):
+        Section.__init__(self)
+        self.b = b
+        self.h = h
+    
+    @property
+    def area(self):
+        self.__area = self.b * self.h
+        return self.__area
+    
+    @property
+    def Ixx(self):
+        self.__Ixx = ((self.b)*(self.h)**3)/12.0
+        return self.__Ixx
+        
+    @property
+    def Iyy(self):
+        self.__Iyy = (((self.b)**3)*(self.h))/12.0
+        return self.__Iyy
+        
 
-p5 = win.addPlot(title="Scatter plot, axis labels, log scale")
-x = np.random.normal(size=1000) * 1e-5
-y = x*1000 + 0.005 * np.random.normal(size=1000)
-y -= y.min()-1.0
-mask = x > 1e-15
-x = x[mask]
-y = y[mask]
-p5.plot(x, y, pen=None, symbol='t', symbolPen=None, symbolSize=10, symbolBrush=(100, 100, 255, 50))
-p5.setLabel('left', "Y Axis", units='A')
-p5.setLabel('bottom', "Y Axis", units='s')
-p5.setLogMode(x=True, y=False)
-
-p6 = win.addPlot(title="Updating plot")
-curve = p6.plot(pen='y')
-data = np.random.normal(size=(10,1000))
-ptr = 0
-def update():
-    global curve, data, ptr, p6
-    curve.setData(data[ptr%10])
-    if ptr == 0:
-        p6.enableAutoRange('xy', False)  ## stop auto-scaling after the first data set is plotted
-    ptr += 1
-timer = QtCore.QTimer()
-timer.timeout.connect(update)
-timer.start(50)
+class CircularSection(Section):
+    def __init__(self,r):
+        Section.__init__(self)
+        self.r = r
+    
+    @property
+    def area(self):
+        self.__area = np.pi*(self.r**2)
+        return self.__area
+    
+    @property
+    def Ixx(self):
+        self.__Ixx = (np.pi/4.0)*self.r**4
+        return self.__Ixx
+        
+    @property
+    def Iyy(self):
+        self.__Iyy = (np.pi/4.0)*self.r**4
+        return self.__Iyy
 
 
-win.nextRow()
+class ISection(Section):
+    def __init__(self,bw,bt,mw,mt,tw,tt):
+        Section.__init__(self)
+        self.bw = bw
+        self.bt = bt
+        self.mw = mw
+        self.mt = mt
+        self.tw = tw
+        self.tt = tt
+    
+    @property
+    def area(self):
+        ab = self.bw*self.bt
+        am = self.mw*self.mt
+        at = self.tw*self.tt
+        self.__area = ab + am + at
+        return self.__area
+    
+    @property
+    def Ixx(self):
+        ixxb = ((self.bw*self.bt**3)/12.0) + (self.bw*self.bt)*(0.5*(self.tt+self.mw))**2
+        ixxm = ((self.mt*self.mw**3)/12.0)
+        ixxt = ((self.tw*self.tt**3)/12.0) + (self.tw*self.tt)*(0.5*(self.bt+self.mw))**2
+        self.__Ixx = ixxb + ixxm + ixxt
+        return self.__Ixx
+        
+    @property
+    def Iyy(self):
+        iyyb = ((self.bt*self.bw**3)/12.0)
+        iyym = ((self.mw*self.mt**3)/12.0)
+        iyyt = ((self.tt*self.tw**3)/12.0)
+        self.__Iyy = iyyb + iyym + iyyt
+        return self.__Iyy
+        
+    @property
+    def centroid(self):
+        ab = self.bw*self.bt
+        yb = self.bt/2.0
+        am = self.mw*self.mt
+        ym = self.bt + self.mw/2.0
+        at = self.tw*self.tt
+        yt = self.bt + self.mw + self.tt/2.0
+        yc = (ab*yb + am*ym + at*yt)/(ab + am + at)
+        xc = self.bw/2.0
+        return (xc, yc)
 
-p7 = win.addPlot(title="Filled plot, axis disabled")
-y = np.sin(np.linspace(0, 10, 1000)) + np.random.normal(size=1000, scale=0.1)
-p7.plot(y, fillLevel=-0.3, brush=(50,50,200,100))
-p7.showAxis('bottom', False)
+
+class TSection(Section):
+    def __init__(self,mw,mt,tw,tt):
+        Section.__init__(self)
+        self.mw = mw
+        self.mt = mt
+        self.tw = tw
+        self.tt = tt
+    
+    @property
+    def area(self):
+        am = self.mw*self.mt
+        at = self.tw*self.tt
+        self.__area = am + at
+        return self.__area
+    
+    @property
+    def Ixx(self):
+        xc, yc = self.centroid
+        ixxm = ((self.mt*self.mw**3)/12.0) + (self.mw*self.mt)*(yc-self.mw/2.0)**2
+        ixxt = ((self.tw*self.tt**3)/12.0) + (self.tw*self.tt)*((self.mw+self.tt/2.0)-yc)**2
+        self.__Ixx = ixxm + ixxt
+        return self.__Ixx
+        
+    @property
+    def Iyy(self):
+        iyym = ((self.mw*self.mt**3)/12.0)
+        iyyt = ((self.tt*self.tw**3)/12.0)
+        self.__Iyy = iyym + iyyt
+        return self.__Iyy
+        
+    @property
+    def centroid(self):
+        am = self.mw*self.mt
+        ym = self.mw/2.0
+        at = self.tw*self.tt
+        yt = self.mw + self.tt/2.0
+        yc = (am*ym + at*yt)/(am + at)
+        xc = self.tw/2.0
+        return (xc, yc)
 
 
-x2 = np.linspace(-100, 100, 1000)
-data2 = np.sin(x2) / x2
-p8 = win.addPlot(title="Region Selection")
-p8.plot(data2, pen=(255,255,255,200))
-lr = pg.LinearRegionItem([400,700])
-lr.setZValue(-10)
-p8.addItem(lr)
 
-p9 = win.addPlot(title="Zoom on selected region")
-p9.plot(data2)
-def updatePlot():
-    p9.setXRange(*lr.getRegion(), padding=0)
-def updateRegion():
-    lr.setRegion(p9.getViewBox().viewRange()[0])
-lr.sigRegionChanged.connect(updatePlot)
-p9.sigXRangeChanged.connect(updateRegion)
-updatePlot()
-
-## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    r = TSection(20,5,20,5)
+    print r.area, r.centroid, r.Ixx, r.Iyy
