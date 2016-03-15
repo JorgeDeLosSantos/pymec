@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Sections 
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class Section(object):
     def __init__(self):
@@ -11,7 +11,7 @@ class Section(object):
         return "%s"%(self.__class__)
 
     
-class RectangleSection(Section):
+class RectangularSection(Section):
     def __init__(self,b,h):
         Section.__init__(self)
         self.b = b
@@ -31,6 +31,24 @@ class RectangleSection(Section):
     def Iyy(self):
         self.__Iyy = (((self.b)**3)*(self.h))/12.0
         return self.__Iyy
+        
+    @property
+    def centroid(self):
+        return (self.b/2.0, self.h/2.0)
+        
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        xc,yc = self.centroid
+        xx = [0, self.b, self.b, 0]
+        yy = [0, 0, self.h, self.h]
+        ax.fill(xx, yy, color=(0,0,1,0.3))
+        ax.plot(xc, yc, "rx")
+        kb, kh = self.b/10.0, self.h/10.0
+        ax.set_xlim(-kb, self.b + kb)
+        ax.set_ylim(-kh, self.h + kh)
+        plt.show()
+        
         
 
 class CircularSection(Section):
@@ -52,6 +70,26 @@ class CircularSection(Section):
     def Iyy(self):
         self.__Iyy = (np.pi/4.0)*self.r**4
         return self.__Iyy
+        
+    @property
+    def centroid(self):
+        return (self.r, self.r)
+        
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        xc,yc = self.centroid
+        t = np.linspace(0,2*np.pi,100)
+        xx = self.r*np.cos(t) + self.r
+        yy = self.r*np.sin(t) + self.r
+        ax.fill(xx, yy, color=(0,0,1,0.3))
+        ax.plot(xc, yc, "rx")
+        kb, kh = self.r/10.0, self.r/10.0
+        ax.set_xlim(-kb, 2*self.r + kb)
+        ax.set_ylim(-kh, 2*self.r + kh)
+        ax.set_aspect('equal')
+        plt.show()
+
 
 
 class ISection(Section):
@@ -100,6 +138,30 @@ class ISection(Section):
         xc = self.bw/2.0
         return (xc, yc)
 
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        xc,yc = self.centroid
+        xx1 = [0,self.bw,self.bw,0]
+        yy1 = [0,0,self.bt,self.bt]
+        xx2 = [xc-self.mt/2.0,xc+self.mt/2.0,xc+self.mt/2.0,xc-self.mt/2.0]
+        yy2 = [self.bt,self.bt,self.bt+self.mw,self.bt+self.mw]
+        xx3 = [xc-self.tw/2.0,xc+self.tw/2.0,xc+self.tw/2.0,xc-self.tw/2.0]
+        yy3 = [self.bt+self.mw,self.bt+self.mw,self.bt+self.mw+self.tt,self.bt+self.mw+self.tt]
+        ax.fill(xx1, yy1, color=(0,0,1,0.4))
+        ax.fill(xx2, yy2, color=(0,0,1,0.4))
+        ax.fill(xx3, yy3, color=(0,0,1,0.4))
+        ax.axhline(y=yc, ls="dotted", color="r")
+        ax.axvline(x=xc, ls="dotted", color="r")
+        ax.plot(xc, yc, "rx")
+        ax.text(xc+xc/50.0, yc+yc/50.0, "(%0.2f, %0.2f)"%(xc,yc))
+        kb, kh = self.bw/10.0, (self.bt + self.mw + self.tt)/10.0
+        ax.set_xlim(-kb, 10*kb + kb)
+        ax.set_ylim(-kh, 10*kh + kh)
+        ax.grid()
+        ax.set_aspect("equal")
+        plt.show()
+
 
 class TSection(Section):
     def __init__(self,mw,mt,tw,tt):
@@ -141,8 +203,44 @@ class TSection(Section):
         xc = self.tw/2.0
         return (xc, yc)
 
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        xc,yc = self.centroid
+        xx1 = [xc-self.mt/2.0,xc+self.mt/2.0,xc+self.mt/2.0,xc-self.mt/2.0]
+        yy1 = [0,0,self.mw,self.mw]
+        xx2 = [xc-self.tw/2.0,xc+self.tw/2.0,xc+self.tw/2.0,xc-self.tw/2.0]
+        yy2 = [self.mw,self.mw,self.mw+self.tt,self.mw+self.tt]
+        ax.fill(xx1, yy1, color=(0,0,1,0.4))
+        ax.fill(xx2, yy2, color=(0,0,1,0.4))
+        ax.axhline(y=yc, ls="dotted", color="r")
+        ax.axvline(x=xc, ls="dotted", color="r")
+        ax.plot(xc, yc, "rx")
+        ax.text(xc+xc/50.0, yc+yc/50.0, "(%0.2f, %0.2f)"%(xc,yc))
+        kb, kh = self.tw/10.0, (self.mw + self.tt)/10.0
+        ax.set_xlim(-kb, 10*kb + kb)
+        ax.set_ylim(-kh, 10*kh + kh)
+        ax.grid()
+        ax.set_aspect("equal")
+        plt.show()
+        
+        
+class FunctionSection(Section):
+    def __init__(self,fx,a,b):
+        Section.__init__(self)
+        self.fx = fx
+        self.a = a
+        self.b = b
+    
+    @property
+    def area(self):
+        x = np.linspace(self.a, self.b)
+        y = eval(self.fx)
+        self.__area = np.trapz(y, x)
+        return self.__area
+
 
 
 if __name__ == '__main__':
-    r = TSection(20,5,20,5)
-    print r.area, r.centroid, r.Ixx, r.Iyy
+    r = FunctionSection("x",0,5)
+    print r.area
