@@ -3,10 +3,23 @@
 import numpy as np
 
 class Material(object):
-    def __init__(self,name,**kwargs):
+    def __init__(self,name,**props):
+        """
+        Create a material class
+        
+        Properties
+        ----------
+        E        : int,float
+            Young modulus
+        nu       : int,float
+            Poisson's ratio
+        density  : int,float
+            Density
+        """
         self.name = name
-        if kwargs.has_key("E"): self.__E = kwargs["E"]
-        if kwargs.has_key("nu"): self.__nu = kwargs["nu"]
+        if props.has_key("E"): self.__E = props["E"]
+        if props.has_key("nu"): self.__nu = props["nu"]
+        if props.has_key("density"): self.__density = props["density"]
     
     @property
     def nu(self):
@@ -23,7 +36,25 @@ class Material(object):
     @E.setter
     def E(self,val):
         self.__E = val
-
+        
+    @property
+    def density(self):
+        return self.__density
+    
+    @density.setter
+    def density(self,val):
+        self.__density = val
+        
+    def toANSYS(self,number):
+        E_str = "MP,EX,%g,%g"%(number,self.E)
+        nu_str = "MP,NUXY,%g,%g"%(number,self.nu)
+        density_str = "MP,DENS,%g,%g"%(number,self.density)
+        return "\n".join([E_str,nu_str,density_str])
+        
+    def toAbaqus(self):
+        pass
+        
 
 if __name__ == '__main__':
-    m = Material("a", E=100, nu=0.3)
+    m = Material("a", E=100, nu=0.3, density=8.6e-9)
+    print m.toANSYS(1)
