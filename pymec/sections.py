@@ -238,9 +238,16 @@ class FunctionSection(Section):
         y = eval(self.fx)
         self.__area = np.trapz(y, x)
         return self.__area
-
+        
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        x = np.linspace(self.a, self.b)
+        y = eval(self.fx)
+        ax.fill_between(x, y)
+        plt.show()
 
 
 if __name__ == '__main__':
-    r = FunctionSection("x",0,5)
-    print r.area
+    r = FunctionSection("x**2",0,5)
+    print r.plot()
